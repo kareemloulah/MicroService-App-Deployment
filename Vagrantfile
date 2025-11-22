@@ -101,117 +101,65 @@ Vagrant.configure("2") do |config|
   config.vm.box = BOX_IMAGE
   config.vm.box_check_update = false
 
-  # Common provisioning script
-  $common_script = <<-SCRIPT
-    set -e
-    echo "=== Provisioning VM: $(hostname) ==="
+  # # Common provisioning script
+  # $common_script = <<-SCRIPT
+  #   set -e
+  #   echo "=== Provisioning VM: $(hostname) ==="
     
-    if [ -f /etc/os-release ]; then
-      . /etc/os-release
-      if [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-        apt-get update -qq
-        apt-get upgrade -y -qq
-        apt-get install -y -qq curl wget vim htop tmux git net-tools
-      elif [ "$ID" = "centos" ] || [ "$ID" = "fedora" ]; then
-        yum update -y -q
-        yum install -y -q curl wget vim htop tmux git net-tools
-      fi
-    fi
+  #   if [ -f /etc/os-release ]; then
+  #     . /etc/os-release
+  #     if [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
+  #       apt-get update -qq
+  #       apt-get upgrade -y -qq
+  #       apt-get install -y -qq curl wget vim htop tmux git net-tools
+  #     elif [ "$ID" = "centos" ] || [ "$ID" = "fedora" ]; then
+  #       yum update -y -q
+  #       yum install -y -q curl wget vim htop tmux git net-tools
+  #     fi
+  #   fi
     
-    echo "=== Provisioning complete ==="
-  SCRIPT
-  $rabbit_script = <<-SCRIPT
-    set -e
-    echo "=== Provisioning VM: $(hostname) ==="
-    
-    #!/bin/sh
-
-    sudo apt-get install curl gnupg apt-transport-https -y
-
-    ## Team RabbitMQ's signing key
-    curl -1sLf "https://keys.openpgp.org/vks/v1/by-fingerprint/0A9AF2115F4687BD29803A206B73A36E6026DFCA" | sudo gpg --dearmor | sudo tee /usr/share/keyrings/com.rabbitmq.team.gpg > /dev/null
-
-    ## Add apt repositories maintained by Team RabbitMQ
-    sudo tee /etc/apt/sources.list.d/rabbitmq.list <<EOF
-    ## Modern Erlang/OTP releases
-    ##
-    deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb1.rabbitmq.com/rabbitmq-erlang/ubuntu/jammy jammy main
-    deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb2.rabbitmq.com/rabbitmq-erlang/ubuntu/jammy jammy main
-
-    ## Latest RabbitMQ releases
-    ##
-    deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb1.rabbitmq.com/rabbitmq-server/ubuntu/jammy jammy main
-    deb [arch=amd64 signed-by=/usr/share/keyrings/com.rabbitmq.team.gpg] https://deb2.rabbitmq.com/rabbitmq-server/ubuntu/jammy jammy main
-    EOF
-
-    ## Update package indices
-    sudo apt-get update -y
-
-    ## Install Erlang packages
-    sudo apt-get install -y erlang-base \
-                            erlang-asn1 erlang-crypto erlang-eldap erlang-ftp erlang-inets \
-                            erlang-mnesia erlang-os-mon erlang-parsetools erlang-public-key \
-                            erlang-runtime-tools erlang-snmp erlang-ssl \
-                            erlang-syntax-tools erlang-tftp erlang-tools erlang-xmerl
-
-    ## Install rabbitmq-server and its dependencies
-    sudo apt-get install rabbitmq-server -y --fix-missing
-    
-    echo "=== Provisioning complete ==="
-  SCRIPT
-  $tomcat_script = <<-SCRIPT
-    set -e
-    echo "=== Provisioning VM: $(hostname) ==="
-    sudo apt install fontconfig openjdk-21-jre
-    sudo mkdir -p /opt/apache-tomcat-11
-    wget https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.14/bin/apache-tomcat-11.0.14.tar.gz
-    sudo tar xvfz -C /opt/apache-tomcat-11
-    git clone https://github.com/abdelrahmanonline4/sourcecodeseniorwr.git
-    cd sourcecodeseniorwr && mvn clean install
-    sudo cp target/vprofile-v2.war $CATALINA_HOME/webapps/
-    sudo $CATALINA_HOME/bin/startup.sh
-    echo "=== Provisioning complete ==="
-  SCRIPT
-  $db_script = <<-SCRIPT
-    set -e
-    echo "=== Provisioning VM: $(hostname) ==="
-    sudo apt-get install apt-transport-https curl -y 
-    sudo mkdir -p /etc/apt/keyrings
-    sudo curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'
-
-    sudo echo "# MariaDB 12.2 repository list - created 2025-11-22 14:06 UTC
-    # https://mariadb.org/download/
-    X-Repolib-Name: MariaDB
-    Types: deb
-    # deb.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for details.
-    # URIs: https://deb.mariadb.org/12.rc/ubuntu
-    URIs: https://mariadb.mirror.liquidtelecom.com/repo/12.2/ubuntu
-    Suites: jammy
-    Components: main main/debug
-    Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp" >> sudo tee /etc/apt/sources.list.d/mariadb.sources
-
-    sudo apt-get update
-    sudo apt-get install mariadb-server -y
-
-    echo "=== Provisioning complete ==="
-  SCRIPT
-  # Create multiple VMs
-  (1..NUM_INSTANCES).each do |i|
-    config.vm.define "#{INSTANCE_NAME_PREFIX}-#{i}" do |vm|
-      vm.vm.hostname = "#{INSTANCE_NAME_PREFIX}-#{i}"
+  #   echo "=== Provisioning complete ==="
+  # SCRIPT
+  
+  # # Create multiple VMs
+  # (1..NUM_INSTANCES).each do |i|
+  #   config.vm.define "#{INSTANCE_NAME_PREFIX}-#{i}" do |vm|
+  #     vm.vm.hostname = "#{INSTANCE_NAME_PREFIX}-#{i}"
       
-      # Configure additional disk
-      vm.vm.provider :libvirt do |libvirt|
-        libvirt.storage :file, :size => "20G", :bus => "virtio", :type => "qcow2"
-      end
+  #     # Configure additional disk
+  #     vm.vm.provider :libvirt do |libvirt|
+  #       libvirt.storage :file, :size => "20G", :bus => "virtio", :type => "qcow2"
+  #     end
 
-      # NAT network - accessible from host
-      vm.vm.network :private_network,
-        :ip => "192.168.56.#{10 + i}",
-        :libvirt__forward_mode => "nat"
+  #     # NAT network - accessible from host
+  #     vm.vm.network :private_network,
+  #       :ip => "192.168.56.#{10 + i}",
+  #       :libvirt__forward_mode => "nat"
 
-      # Run provisioning script
-      vm.vm.provision :shell, :inline => $common_script
+  #     # Run provisioning script
+  #     vm.vm.provision :shell, :inline => $common_script
+  #   end
+  # end
+vm_names = ["nginx", "tomcat", "mariadb", "memcached", "rabbitmq"]
+vm_names.each_with_index do |name, index|
+  config.vm.define name do |vm|
+
+    vm.vm.hostname = name
+    
+    # Add disk
+    vm.vm.provider :libvirt do |libvirt|
+      libvirt.storage :file, :size => "20G", :bus => "virtio", :type => "qcow2"
     end
+
+    # Unique IP for each VM
+    vm.vm.network :private_network,
+      ip: "192.168.56.#{10 + index + 1}",
+      libvirt__forward_mode: "nat"
+
+    # Script for this VM
+    vm.vm.provision "shell", path: "scripts/#{name}.sh"
   end
+end
+
+
 end
