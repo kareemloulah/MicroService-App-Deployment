@@ -5,7 +5,7 @@ echo "=== Provisioning VM: $(hostname) ==="
 if [ -f /etc/os-release ]; then
       . /etc/os-release
       if [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-        sudo apt update -qq
+        sudo apt update
         sudo apt install -y -qq curl wget tree vim htop tmux git net-tools
         sudo apt-get install apt-transport-https curl -y 
         sudo mkdir -p /etc/apt/keyrings

@@ -4,7 +4,7 @@ echo "=== Provisioning VM: $(hostname) ==="
 if [ -f /etc/os-release ]; then
       . /etc/os-release
       if [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-        sudo apt update -qq
+        sudo apt update
         sudo apt install -y curl wget tree vim htop tmux git net-tools
         sudo apt-get install gnupg apt-transport-https -y
         ## Team RabbitMQ's signing key
