@@ -131,11 +131,7 @@ EOF
     ###################################################################
     # Edit manager/META-INF/context.xml (Allow remote manager access)
     ###################################################################
-    sed -i 's/<Valve.*RemoteAddrValve.*>//g' \
-        $TOMCAT_DIR/webapps/manager/META-INF/context.xml || true
-
-    sed -i 's/<Valve.*RemoteAddrValve.*>//g' \
-        $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml || true
+    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
 
     echo "-- Creating systemd service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
@@ -170,5 +166,6 @@ EOF
 
 fi
 fi
-
 echo "=== Provisioning complete ==="
+
+echo "=== you are safe to build and send WAR file to /usr/local/tomcat/webapps/ ==="
