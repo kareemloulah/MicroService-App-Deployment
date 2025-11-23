@@ -30,7 +30,7 @@ if [ -f /etc/os-release ]; then
         GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%';
         FLUSH PRIVILEGES;" | mariadb -u root -p"kareem" 
         wget https://raw.githubusercontent.com/kareemloulah/MicroService-App-Deployment/refs/heads/main/src/main/resources/db_backup.sql
-        mariadb -u root -p"kareem" < db_backup.sql
+        mariadb -u root -p"kareem" accounts < db_backup.sql
       elif [ "$ID" = "centos" ] || [ "$ID" = "fedora" ]; then
         yum update -y -q
         yum install -y -q curl wget vim htop tmux git net-tools
