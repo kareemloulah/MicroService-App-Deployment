@@ -80,8 +80,6 @@
 
 Vagrant.configure("2") do |config|
   # Define number of VMs and their base image
-  NUM_INSTANCES = 5
-  INSTANCE_NAME_PREFIX = "machine"
   BOX_IMAGE = "generic/ubuntu2204"
   
   # Libvirt provider defaults
@@ -90,7 +88,7 @@ Vagrant.configure("2") do |config|
     libvirt.host = "localhost"
     libvirt.uri = "qemu:///system"
     libvirt.cpus = 1
-    libvirt.memory = 2048
+    libvirt.memory = 1500
     libvirt.cpu_mode = "host-model"
     # libvirt.storage_pool_name = "vagrant"
     libvirt.disk_bus = "virtio"
