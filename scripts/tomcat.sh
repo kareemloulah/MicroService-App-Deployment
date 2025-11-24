@@ -55,11 +55,8 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
 EOF
 
     # Remove access restriction from manager app
-    sed -i 's/<Valve.*RemoteAddrValve.*>//g' \
-        $CATALINA_HOME/webapps/manager/META-INF/context.xml || true
+    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
 
-    sed -i 's/<Valve.*RemoteAddrValve.*>//g' \
-        $CATALINA_HOME/webapps/host-manager/META-INF/context.xml || true
 
     ##################################################################
     # Create systemd service for Tomcat
@@ -169,3 +166,52 @@ fi
 echo "=== Provisioning complete ==="
 
 echo "=== you are safe to build and send WAR file to /usr/local/tomcat/webapps/ ==="
+echo "Cloning application source code..."
+cd /tmp
+# Check if directory exists to avoid error
+if [ -d "sourcecodeseniorwr" ]; then
+    rm -rf sourcecodeseniorwr
+fi
+git clone https://github.com/abdelrahmanonline4/sourcecodeseniorwr.git
+
+echo "Configuring application properties..."
+sudo tee /tmp/sourcecodeseniorwr/src/main/resources/application.properties << EOF
+#JDBC Configutation for Database Connection
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://mariadb:3306/accounts?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull
+jdbc.username=admin
+jdbc.password=admin
+
+#Memcached Configuration For Active and StandBy Host
+#For Active Host
+memcached.active.host=memcache
+memcached.active.port=11211
+#For StandBy Host
+memcached.standBy.host=memcache
+memcached.standBy.port=11211
+
+#RabbitMq Configuration
+rabbitmq.address=rabbitmq
+rabbitmq.port=5672
+rabbitmq.username=test
+rabbitmq.password=test
+
+#Elasticesearch Configuration
+elasticsearch.host =vprosearch01
+elasticsearch.port =9300
+elasticsearch.cluster=vprofile
+elasticsearch.node=vprofilenode
+EOF
+
+echo "Building application with Maven..."
+cd /tmp/sourcecodeseniorwr
+mvn install 
+
+echo "Deploying application to Tomcat..."
+sudo systemctl stop tomcat
+sudo cp target/vprofile-v2.war /usr/local/tomcat/webapps/
+sudo systemctl start tomcat
+sudo chown tomcat.tomcat /usr/local/tomcat/webapps -R
+sudo systemctl restart tomcat
+
+echo "APP01 setup complete."
