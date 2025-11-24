@@ -68,37 +68,4 @@ EOF
     fi
 fi
 
-
-####################################
-# Create Tomcat systemd service file
-####################################
-echo "-- Creating Tomcat systemd service --"
-
-cat <<EOF >/etc/systemd/system/tomcat.service
-[Unit]
-Description=Tomcat
-After=network.target
-
-[Service]
-User=tomcat
-Group=tomcat
-WorkingDirectory=/usr/local/tomcat
-Environment=JAVA_HOME=/usr/lib/jvm/jre
-Environment=CATALINA_PID=/var/tomcat/%i/run/tomcat.pid
-Environment=CATALINA_HOME=/usr/local/tomcat
-Environment=CATALINA_BASE=/usr/local/tomcat
-ExecStart=/usr/local/tomcat/bin/catalina.sh run
-ExecStop=/usr/local/tomcat/bin/shutdown.sh
-RestartSec=10
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-chmod 644 /etc/systemd/system/tomcat.service
-systemctl daemon-reload
-
-echo "-- Tomcat service file created --"
-
 echo "=== Provisioning complete ==="
