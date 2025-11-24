@@ -129,6 +129,7 @@ EOF
     # Edit manager/META-INF/context.xml (Allow remote manager access)
     ###################################################################
     sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
+    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/manager/META-INF/context.xml
 
     echo "-- Creating systemd service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
@@ -166,6 +167,7 @@ fi
 echo "=== Provisioning complete ==="
 
 echo "=== you are safe to build and send WAR file to /usr/local/tomcat/webapps/ ==="
+
 echo "Cloning application source code..."
 cd /tmp
 # Check if directory exists to avoid error
@@ -205,7 +207,7 @@ EOF
 
 echo "Building application with Maven..."
 cd /tmp/sourcecodeseniorwr
-mvn install 
+mvn clean install 
 
 echo "Deploying application to Tomcat..."
 sudo systemctl stop tomcat
