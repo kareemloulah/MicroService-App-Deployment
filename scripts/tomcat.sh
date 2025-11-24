@@ -5,26 +5,29 @@ echo "=== Provisioning VM: $(hostname) ==="
 
 if [ -f /etc/os-release ]; then
     . /etc/os-release
+fi
 
-######################################################################
-# Ubuntu / Debian
-######################################################################
+###########################################################################
+# UBUNTU / DEBIAN
+###########################################################################
 if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
 
     echo "-- Installing packages --"
     apt update
-    apt install -y curl wget tree vim htop tmux git net-tools fontconfig openjdk-17-jre openjdk-17-jdk maven
+    apt install -y curl wget tree vim htop tmux git net-tools fontconfig \
+        openjdk-17-jre openjdk-17-jdk maven
 
     echo "-- Creating tomcat user --"
     useradd -m -U -d /usr/local/tomcat -s /bin/false tomcat || true
 
     echo "-- Downloading Tomcat --"
-    mkdir -p /opt/apache/
-    cd /opt/apache/
-    wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
-    tar xvf apache-tomcat-9.0.112.tar.gz
+    mkdir -p /opt/apache
+    cd /opt/apache
+    wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
+    tar xzf apache-tomcat-9.0.112.tar.gz
 
     CATALINA_HOME=/opt/apache/apache-tomcat-9.0.112
+    TOMCAT_DIR=$CATALINA_HOME   # <== FIXED
 
     echo "-- Setting Tomcat permissions --"
     chown -R tomcat:tomcat $CATALINA_HOME
@@ -32,19 +35,15 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
 
     echo "-- Cloning & building app --"
     cd /opt/
-    git clone https://github.com/kareemloulah/MicroService-App-Deployment.git
+    git clone https://github.com/kareemloulah/MicroService-App-Deployment.git || true
     cd MicroService-App-Deployment
     mvn clean install -DskipTests
 
     echo "-- Deploying WAR --"
     cp target/vprofile-v2.war $CATALINA_HOME/webapps/
 
-    ##################################################################
-    # Edit Tomcat configuration files
-    ##################################################################
     echo "-- Editing Tomcat configuration (users + manager access) --"
 
-    # tomcat-users.xml
     cat <<EOF >"$CATALINA_HOME/conf/tomcat-users.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <tomcat-users>
@@ -54,23 +53,19 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
 </tomcat-users>
 EOF
 
-    # Remove access restriction from manager app
+    # FIXED: Correct paths for context.xml
+    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/manager/META-INF/context.xml
     sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
 
-
-    ##################################################################
-    # Create systemd service for Tomcat
-    ##################################################################
     echo "-- Creating Tomcat service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
 [Unit]
-Description=Tomcat
+Description=Tomcat Application Server
 After=network.target
 
 [Service]
 User=tomcat
 Group=tomcat
-WorkingDirectory=$CATALINA_HOME
 Environment=JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 Environment=CATALINA_HOME=$CATALINA_HOME
 Environment=CATALINA_BASE=$CATALINA_HOME
@@ -87,23 +82,21 @@ EOF
     systemctl enable tomcat
     systemctl start tomcat
 
-
-######################################################################
-# CentOS / Fedora
-######################################################################
+###########################################################################
+# CENTOS / FEDORA
+###########################################################################
 elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
 
     echo "-- Installing packages --"
     dnf update -y
-    dnf install -y curl wget vim htop tmux git net-tools java-17-openjdk java-17-openjdk-devel maven firewalld
+    dnf install -y curl wget vim htop tmux git net-tools \
+        java-17-openjdk java-17-openjdk-devel maven firewalld
 
     echo "-- Downloading Tomcat --"
-    cd /tmp/
-    if [ -d "apache-tomcat-9.0.112.tar.gz" ]; then
-    rm -rf apache-tomcat-9.0.112.tar.gz
-fi
-    wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
-    tar -xvzf apache-tomcat-9.0.112.tar.gz
+    cd /tmp
+    rm -f apache-tomcat-9.0.112.tar.gz
+    wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
+    tar xzf apache-tomcat-9.0.112.tar.gz
 
     echo "-- Creating tomcat user --"
     useradd --home-dir /usr/local/tomcat --shell /sbin/nologin tomcat || true
@@ -116,9 +109,6 @@ fi
 
     TOMCAT_DIR=/usr/local/tomcat
 
-    ###################################################
-    # Edit conf/tomcat-users.xml (Add admin user)
-    ###################################################
     cat <<EOF >"$TOMCAT_DIR/conf/tomcat-users.xml"
 <?xml version="1.0" encoding="UTF-8"?>
 <tomcat-users>
@@ -128,16 +118,13 @@ fi
 </tomcat-users>
 EOF
 
-    ###################################################################
-    # Edit manager/META-INF/context.xml (Allow remote manager access)
-    ###################################################################
-    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
     sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/manager/META-INF/context.xml
+    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
 
     echo "-- Creating systemd service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
 [Unit]
-Description=Tomcat
+Description=Tomcat Application Server
 After=network.target
 
 [Service]
@@ -149,8 +136,8 @@ Environment=CATALINA_HOME=/usr/local/tomcat
 Environment=CATALINA_BASE=/usr/local/tomcat
 ExecStart=/usr/local/tomcat/bin/catalina.sh run
 ExecStop=/usr/local/tomcat/bin/shutdown.sh
-RestartSec=10
 Restart=always
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
@@ -166,57 +153,48 @@ EOF
     firewall-cmd --reload
 
 fi
-fi
-echo "=== Provisioning complete ==="
 
-echo "=== you are safe to build and send WAR file to /usr/local/tomcat/webapps/ ==="
+###########################################################################
+# APPLICATION BUILD & DEPLOYMENT
+###########################################################################
 
-echo "Cloning application source code..."
+echo "Cloning backend application..."
 cd /tmp
-# Check if directory exists to avoid error
-if [ -d "sourcecodeseniorwr" ]; then
-    rm -rf sourcecodeseniorwr
-fi
+rm -rf sourcecodeseniorwr
 git clone https://github.com/abdelrahmanonline4/sourcecodeseniorwr.git
 
-echo "Configuring application properties..."
-sudo tee /tmp/sourcecodeseniorwr/src/main/resources/application.properties << EOF
-#JDBC Configutation for Database Connection
+echo "Configuring application.properties..."
+cat <<EOF > /tmp/sourcecodeseniorwr/src/main/resources/application.properties
 jdbc.driverClassName=com.mysql.jdbc.Driver
 jdbc.url=jdbc:mysql://mariadb:3306/accounts?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull
 jdbc.username=admin
 jdbc.password=admin
 
-#Memcached Configuration For Active and StandBy Host
-#For Active Host
 memcached.active.host=memcache
 memcached.active.port=11211
-#For StandBy Host
 memcached.standBy.host=memcache
 memcached.standBy.port=11211
 
-#RabbitMq Configuration
 rabbitmq.address=rabbitmq
 rabbitmq.port=5672
 rabbitmq.username=test
 rabbitmq.password=test
 
-#Elasticesearch Configuration
-elasticsearch.host =vprosearch01
-elasticsearch.port =9300
+elasticsearch.host=vprosearch01
+elasticsearch.port=9300
 elasticsearch.cluster=vprofile
 elasticsearch.node=vprofilenode
 EOF
 
-echo "Building application with Maven..."
+echo "Building application..."
 cd /tmp/sourcecodeseniorwr
-mvn clean install 
+mvn clean install -DskipTests
 
-echo "Deploying application to Tomcat..."
-sudo systemctl stop tomcat
-sudo cp target/vprofile-v2.war /usr/local/tomcat/webapps/
-sudo systemctl start tomcat
-sudo chown tomcat.tomcat /usr/local/tomcat/webapps -R
-sudo systemctl restart tomcat
+echo "Deploying application..."
+systemctl stop tomcat
+sudo rm -rf $TOMCAT_DIR/webapps/*
+cp target/vprofile-v2.war $TOMCAT_DIR/webapps/ROOT.war
+chown -R tomcat:tomcat $TOMCAT_DIR/webapps/
+systemctl start tomcat
 
 echo "APP01 setup complete."
