@@ -99,6 +99,9 @@ elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
 
     echo "-- Downloading Tomcat --"
     cd /tmp/
+    if [ -d "apache-tomcat-9.0.112.tar.gz" ]; then
+    rm -rf apache-tomcat-9.0.112.tar.gz
+fi
     wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
     tar -xvzf apache-tomcat-9.0.112.tar.gz
 

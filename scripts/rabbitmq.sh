@@ -61,9 +61,9 @@ EOF
         systemctl restart rabbitmq-server
 
         echo "-- Configuring Firewall --"
-        systemctl enable --now firewalld
-        firewall-cmd --add-port=5672/tcp
-        firewall-cmd --runtime-to-permanent
+        sudo systemctl enable --now firewalld
+        sudo firewall-cmd --add-port=5672/tcp
+        sudo firewall-cmd --runtime-to-permanent
 
     fi
 fi
