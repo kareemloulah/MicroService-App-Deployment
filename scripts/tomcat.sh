@@ -21,20 +21,20 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
     useradd -m -U -d /usr/local/tomcat -s /bin/false tomcat || true
 
     echo "-- Downloading Tomcat --"
-    mkdir -p /opt/apache
-    cd /opt/apache
+    mkdir -p /usr/local/tomcat
+    cd /usr/local/tomcat
     wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
     tar xzf apache-tomcat-9.0.112.tar.gz
 
-    CATALINA_HOME=/opt/apache/apache-tomcat-9.0.112
-    TOMCAT_DIR=$CATALINA_HOME   # <== FIXED
+    CATALINA_HOME=/usr/local/apache-tomcat-9.0.112
+    TOMCAT_DIR=$CATALINA_HOME
 
     echo "-- Setting Tomcat permissions --"
     chown -R tomcat:tomcat $CATALINA_HOME
     chmod +x $CATALINA_HOME/bin/*.sh
 
     echo "-- Cloning & building app --"
-    cd /opt/
+    cd /tmp
     git clone https://github.com/kareemloulah/MicroService-App-Deployment.git || true
     cd MicroService-App-Deployment
     mvn clean install -DskipTests
@@ -43,19 +43,6 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
     cp target/vprofile-v2.war $CATALINA_HOME/webapps/
 
     echo "-- Editing Tomcat configuration (users + manager access) --"
-
-    cat <<EOF >"$CATALINA_HOME/conf/tomcat-users.xml"
-<?xml version="1.0" encoding="UTF-8"?>
-<tomcat-users>
-    <role rolename="manager-gui"/>
-    <role rolename="admin-gui"/>
-    <user username="admin" password="admin" roles="manager-gui,admin-gui"/>
-</tomcat-users>
-EOF
-
-    # FIXED: Correct paths for context.xml
-    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/manager/META-INF/context.xml
-    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
 
     echo "-- Creating Tomcat service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
@@ -108,18 +95,6 @@ elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
     chmod +x /usr/local/tomcat/bin/*.sh
 
     TOMCAT_DIR=/usr/local/tomcat
-
-    cat <<EOF >"$TOMCAT_DIR/conf/tomcat-users.xml"
-<?xml version="1.0" encoding="UTF-8"?>
-<tomcat-users>
-    <role rolename="manager-gui"/>
-    <role rolename="admin-gui"/>
-    <user username="admin" password="admin" roles="manager-gui,admin-gui"/>
-</tomcat-users>
-EOF
-
-    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/manager/META-INF/context.xml
-    sed -i '/<Valve/,/\/>/d' $TOMCAT_DIR/webapps/host-manager/META-INF/context.xml
 
     echo "-- Creating systemd service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
