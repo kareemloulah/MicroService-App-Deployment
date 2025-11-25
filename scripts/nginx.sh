@@ -13,6 +13,7 @@ if [ -f /etc/os-release ]; then
     sudo apt install -y curl wget tree vim htop tmux git net-tools nginx
 
     echo "-- Configuring Nginx reverse proxy to Tomcat --"
+    sudo rm /etc/nginx/sites-enabled/*
     sudo tee /etc/nginx/sites-available/tomcat.conf >/dev/null <<EOF
 server {
     listen 80;
@@ -44,6 +45,7 @@ EOF
     sudo yum install -y -q curl wget vim htop tmux git net-tools nginx
 
     echo "-- Configuring Nginx reverse proxy to Tomcat --"
+    sudo rm  /etc/nginx/conf.d/*
     sudo tee /etc/nginx/conf.d/tomcat.conf >/dev/null <<EOF
 server {
     listen 80;

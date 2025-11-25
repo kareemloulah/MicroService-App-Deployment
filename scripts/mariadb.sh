@@ -56,10 +56,10 @@ elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
     echo "-- Installing MariaDB on CentOS/Fedora --"
     dnf update -y
     dnf install -y epel-release
-    dnf install -y -q curl wget vim htop tmux git net-tools mariadb-server
+    dnf install -y -q curl wget vim htop tmux git net-tools mariadb-server firewalld
 
-    systemctl enable --now mariadb
-
+    systemctl enable mariadb
+    systemctl start mariadb
     echo "-- Creating database + users --"
     mariadb -u root <<EOF
 CREATE DATABASE IF NOT EXISTS accounts;

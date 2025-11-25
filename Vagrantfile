@@ -32,8 +32,8 @@ Vagrant.configure("2") do |config|
         hv.ip_address_timeout = 300
       end
 
-      # # Provision script
-      # machine.vm.provision "shell", path: "scripts/#{vm[:name]}.sh"
+      # Provision script
+      machine.vm.provision "shell", path: "scripts/#{vm[:name]}.sh"
     end
   end
 end

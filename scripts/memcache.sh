@@ -27,7 +27,7 @@ elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
 
     echo "-- Installing packages --"
     sudo dnf update -y
-    sudo dnf install -y curl wget tree vim htop tmux git net-tools memcached
+    sudo dnf install -y curl wget tree vim htop tmux git net-tools memcached firewalld
 
     echo "-- Allow memcached to listen on all interfaces --"
     sudo sed -i 's/OPTIONS="-l 127.0.0.1"/OPTIONS="-l 0.0.0.0"/' /etc/sysconfig/memcached

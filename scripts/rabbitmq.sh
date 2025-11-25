@@ -45,7 +45,7 @@ EOF
     elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
         echo "-- Updating system packages --"
         dnf update -y
-        dnf install -y curl wget vim htop tmux git net-tools centos-release-rabbitmq-38
+        dnf install -y curl wget vim htop tmux git net-tools centos-release-rabbitmq-38 firewalld
 
         dnf --enablerepo=centos-rabbitmq-38 -y install rabbitmq-server
 
