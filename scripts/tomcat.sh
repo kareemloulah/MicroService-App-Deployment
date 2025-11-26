@@ -18,20 +18,21 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
         openjdk-17-jre openjdk-17-jdk maven
 
     echo "-- Creating tomcat user --"
-    useradd -m -U -d /usr/local/tomcat -s /bin/false tomcat || true
+    useradd --home-dir /usr/local/tomcat --shell /sbin/nologin tomcat || true
 
     echo "-- Downloading Tomcat --"
-    mkdir -p /usr/local/tomcat
+    mkdir -p /usr/local/tomcat || true
     cd /tmp
     wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
     tar xzvf apache-tomcat-9.0.112.tar.gz
-    sudo cp -r apache-tomcat-9.0.112/* /usr/local/tomcat/
+    sudo cp -r /tmp/apache-tomcat-9.0.112/* /usr/local/tomcat/
 
     CATALINA_HOME=/usr/local/tomcat
     TOMCAT_DIR=$CATALINA_HOME
 
     echo "-- Setting Tomcat permissions --"
     chown -R tomcat:tomcat $CATALINA_HOME
+    chmod +x /usr/local/tomcat/bin/*.sh
 
     echo "-- Creating Tomcat service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
@@ -78,7 +79,7 @@ elif [[ "$ID" = "centos" || "$ID" = "fedora" ]]; then
     useradd --home-dir /usr/local/tomcat --shell /sbin/nologin tomcat || true
 
     echo "-- Installing Tomcat --"
-    mkdir -p /usr/local/tomcat
+    mkdir -p /usr/local/tomcat || true
     cp -r /tmp/apache-tomcat-9.0.112/* /usr/local/tomcat/
     chown -R tomcat:tomcat /usr/local/tomcat
     chmod +x /usr/local/tomcat/bin/*.sh
