@@ -26,23 +26,12 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
     wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
     tar xzf apache-tomcat-9.0.112.tar.gz
 
-    CATALINA_HOME=/usr/local/apache-tomcat-9.0.112
+    CATALINA_HOME=/usr/local/tomcat
     TOMCAT_DIR=$CATALINA_HOME
 
     echo "-- Setting Tomcat permissions --"
     chown -R tomcat:tomcat $CATALINA_HOME
     chmod +x $CATALINA_HOME/bin/*.sh
-
-    echo "-- Cloning & building app --"
-    cd /tmp
-    git clone https://github.com/kareemloulah/MicroService-App-Deployment.git || true
-    cd MicroService-App-Deployment
-    mvn clean install -DskipTests
-
-    echo "-- Deploying WAR --"
-    cp target/vprofile-v2.war $CATALINA_HOME/webapps/
-
-    echo "-- Editing Tomcat configuration (users + manager access) --"
 
     echo "-- Creating Tomcat service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
