@@ -31,7 +31,6 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
 
     echo "-- Setting Tomcat permissions --"
     chown -R tomcat:tomcat $CATALINA_HOME
-    chmod +x $CATALINA_HOME/bin/*.sh
 
     echo "-- Creating Tomcat service --"
     cat <<EOF >/etc/systemd/system/tomcat.service
