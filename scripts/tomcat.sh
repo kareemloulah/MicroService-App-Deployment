@@ -22,9 +22,10 @@ if [[ "$ID" = "ubuntu" || "$ID" = "debian" ]]; then
 
     echo "-- Downloading Tomcat --"
     mkdir -p /usr/local/tomcat
-    cd /usr/local/tomcat
+    cd /tmp
     wget -q https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.112/bin/apache-tomcat-9.0.112.tar.gz
     tar xzf apache-tomcat-9.0.112.tar.gz
+    sudo cp -r apache-tomcat-9.0.112/* /usr/local/tomcat/
 
     CATALINA_HOME=/usr/local/tomcat
     TOMCAT_DIR=$CATALINA_HOME
