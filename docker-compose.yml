@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      app-network:
+  mysql:
+    image: mysql:8.4.7
+    environment:
+      MYSQL_ROOT_PASSWORD: kareem99
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+      MYSQL_DATABASE: accounts
+    volumes:
+      - mysqldata:/var/lib/mysql
+  memcahce:
+  rabbitmq:
+  nginx:
+networks:
+  app-network:
+volumes:
+  mysqldata:
+  
