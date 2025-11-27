@@ -44,7 +44,7 @@ EOF
 
     echo "-- Importing DB backup --"
     cd /tmp
-    wget -q https://raw.githubusercontent.com/kareemloulah/MicroService-App-Deployment/refs/heads/main/src/main/resources/db_backup.sql
+    wget -q https://raw.githubusercontent.com/abdelrahmanonline4/sourcecodeseniorwr/refs/heads/Master/src/main/resources/db_backup.sql
     mariadb -u root accounts < /tmp/db_backup.sql
 
 
@@ -70,7 +70,7 @@ EOF
 
     echo "-- Importing DB backup --"
     cd /tmp
-    wget -q https://raw.githubusercontent.com/kareemloulah/MicroService-App-Deployment/refs/heads/main/src/main/resources/db_backup.sql
+    wget -q https://raw.githubusercontent.com/abdelrahmanonline4/sourcecodeseniorwr/refs/heads/Master/src/main/resources/db_backup.sql
     mariadb -u root accounts < /tmp/db_backup.sql
 
     echo "-- Configuring firewall --"
